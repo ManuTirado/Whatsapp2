@@ -4,15 +4,15 @@ import java.util.Scanner;
 public class Main {
 
     private static String servidor = "jdbc:mysql://dns11036.phdns11.es";
-    private static String user = "ad2223_mtirado";
+    private static String user = "ad2223_acastro";
     private static String password = "1234";
-    private static String baseDatos = "ad2223_mtirado";
+    private static String baseDatos = "ad2223_acastro";
 
     private static Connection connection;
     private static Statement st;
 
     public static void main(String[] args) {
-        //login();
+        login();
 
         try {
             connection = conectar();
