@@ -4,9 +4,9 @@ import java.util.Scanner;
 public class Main {
 
     private static String servidor = "jdbc:mysql://dns11036.phdns11.es";
-    private static String user = "ad2223_acastro";
+    private static String user = "ad2223_mtirado";
     private static String password = "1234";
-    private static String baseDatos = "ad2223_acastro";
+    private static String baseDatos = "ad2223_mtirado";
 
     private static Connection connection;
     private static Statement st;

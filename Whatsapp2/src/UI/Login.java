@@ -13,4 +13,8 @@ public class Login extends JFrame{
         super();
         setContentPane(panel1);
     }
+
+    public void createUIComponents() {
+
+    }
 }
