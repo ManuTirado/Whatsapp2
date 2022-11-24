@@ -4,9 +4,9 @@ import java.util.Scanner;
 public class Main {
 
     private static String servidor = "jdbc:mysql://dns11036.phdns11.es";
-    private static String user = "ad2223_acastro";
+    private static String user = "ad2223_mtirado";
     private static String password = "1234";
-    private static String baseDatos = "ad2223_acastro";
+    private static String baseDatos = "ad2223_mtirado";
 
     private static Connection connection;
     private static Statement st;
@@ -26,7 +26,7 @@ public class Main {
                 int opc;
                 do {
                     mostrarMenuPrincipal();
-                    opc = Utilidades.validarOpcion(0,3);
+                    opc = Utilidades.validarOpcion(0, 3);
                     switch (opc) {
                         case 1:     // Contactos
                             contactos();
@@ -56,12 +56,11 @@ public class Main {
     }
 
 
-
     private static void contactos() {
         try {
             ResultSet rs = obtenerContactosSinBloquear();
             System.out.println("IdContacto    Nombre");
-            while(rs.next()){
+            while (rs.next()) {
                 System.out.println();
                 System.out.println("     " + rs.getString("IdContacto") + "        " + rs.getString("NombreContacto"));
             }
@@ -76,13 +75,65 @@ public class Main {
     }
 
     private static void abrirChat(int id) {
+        String nombreContacto = conseguirNombrePorId(id);
+        mostrarHistorialMensajes(id);
+        String mensaje = recibirMensaje();
+        insertarMensajeEnTabla(nombreContacto, mensaje, id);
+    }
 
+    private static void insertarMensajeEnTabla(String nombreContacto, String mensaje, int id) {
+        String sql = "INSERT INTO " + baseDatos + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
+                "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 0, " + id + ")";
+
+        System.out.println(sql);
+        try {
+            st.execute(sql);
+        } catch (SQLException sqlException) {
+            System.err.println(sqlException);
+        }
+
+    }
+
+    private static String recibirMensaje() {
+        Scanner sc = new Scanner(System.in);
+        return sc.nextLine();
+    }
+
+    private static void mostrarHistorialMensajes(int idConatcto) {
+        String sql = "SELECT Texto, FechaHora FROM " + baseDatos + ".Mensajes WHERE IdContacto = " + idConatcto + ";";
+        try {
+            ResultSet rs = st.executeQuery(sql);
+            while (rs.next()){
+                System.out.println(rs.getDate("FechaHora") + "  " + rs.getString("Texto"));
+            }
+
+        } catch (SQLException sqlException) {
+            System.err.println(sqlException.getMessage());
+        }
+    }
+
+
+    private static String conseguirNombrePorId(int id) {
+        String nombreContacto = "";
+        String sql = "SELECT NombreContacto FROM " + baseDatos + ".Contactos WHERE IdContacto = " + id + ";";
+        try {
+            ResultSet rs = st.executeQuery(sql);
+            if(rs.next()){
+                nombreContacto = rs.getString("NombreContacto");
+            }
+
+        } catch (SQLException sqlException) {
+            System.err.println(sqlException.getMessage());
+        }
+
+
+        return nombreContacto;
     }
 
     private static void mostrarContactos(ResultSet rs) {
         try {
             System.out.println("IdContacto    Nombre");
-            while(rs.next()){
+            while (rs.next()) {
                 System.out.println();
                 System.out.println("     " + rs.getString("IdContacto") + "        " + rs.getString("NombreContacto"));
             }
@@ -94,7 +145,7 @@ public class Main {
 
     private static ResultSet obtenerTodosContactos() {
         ResultSet rs = null;
-        String sql = "SELECT IdContacto, NombreContacto FROM "+ baseDatos +".Contactos";
+        String sql = "SELECT IdContacto, NombreContacto FROM " + baseDatos + ".Contactos";
         try {
             rs = st.executeQuery(sql);
         } catch (SQLException sqlException) {
@@ -105,7 +156,7 @@ public class Main {
 
     private static ResultSet obtenerContactosSinBloquear() {
         ResultSet rs = null;
-        String sql = "SELECT IdContacto, NombreContacto FROM "+ baseDatos +".Contactos WHERE IsBloqueado = 0";
+        String sql = "SELECT IdContacto, NombreContacto FROM " + baseDatos + ".Contactos WHERE IsBloqueado = 0";
         try {
             rs = st.executeQuery(sql);
         } catch (SQLException sqlException) {
@@ -124,7 +175,7 @@ public class Main {
         System.out.println("Diga el id del contacto que quiere bloquear: ");
         idContacto = sc.nextInt();
 
-        sqlQuery = "SELECT IsBloqueado FROM " + baseDatos +".Contactos WHERE IdContacto= "+ idContacto+";";
+        sqlQuery = "SELECT IsBloqueado FROM " + baseDatos + ".Contactos WHERE IdContacto= " + idContacto + ";";
         try {
            /* ResultSet resultSet = obtenerTodosContactos();
             nombreContacto = resultSet.getString("NombreContacto");*/
@@ -132,10 +183,10 @@ public class Main {
             if (rs.next()) {
                 isBloqueado = Integer.parseInt(rs.getString("IsBloqueado"));
             }
-            if (isBloqueado == 0){
-                sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 1 WHERE IdContacto= "+ idContacto+";";
-            }else{
-                sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 0 WHERE IdContacto= "+ idContacto+";";
+            if (isBloqueado == 0) {
+                sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 1 WHERE IdContacto= " + idContacto + ";";
+            } else {
+                sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 0 WHERE IdContacto= " + idContacto + ";";
                 /*sql="GRANT INSERT " +
                         "ON " + baseDatos + ".* " +
                         "TO '"+nombreContacto+"'@'localHost';";
@@ -157,13 +208,13 @@ public class Main {
         System.out.print("==> ");
         nombreContacto = sc.nextLine();
 
-        String sql = "INSERT INTO " + baseDatos + ".Contactos (NombreContacto, IsBloqueado) values ('"+nombreContacto+"', 0);";
+        String sql = "INSERT INTO " + baseDatos + ".Contactos (NombreContacto, IsBloqueado) values ('" + nombreContacto + "', 0);";
         try {
             st.executeUpdate(sql);
 
-            sql="GRANT INSERT " +
+            sql = "GRANT INSERT " +
                     "ON " + baseDatos + ".* " +
-                    "TO '"+nombreContacto+"'@'localHost';";
+                    "TO '" + nombreContacto + "'@'localHost';";
             st.execute(sql);
         } catch (Exception e) {
             e.printStackTrace();
