@@ -4,15 +4,16 @@ import java.util.Scanner;
 public class Main {
 
     private static String servidor = "jdbc:mysql://dns11036.phdns11.es";
-    private static String user = "ad2223_mtirado";
+    private static String user = "mtirado";
     private static String password = "1234";
     private static String baseDatos = "ad2223_mtirado";
+    private static String baseDatosDestino = "ad2223_mtirado";
 
     private static Connection connection;
     private static Statement st;
 
     public static void main(String[] args) {
-        login();
+        //login();
 
         try {
             connection = conectar();
@@ -58,16 +59,25 @@ public class Main {
 
     private static void contactos() {
         try {
+            boolean hayContactos = false;
             ResultSet rs = obtenerContactosSinBloquear();
+            ResultSetMetaData rsm = rs.getMetaData();
             System.out.println("IdContacto    Nombre");
             while (rs.next()) {
+                hayContactos = true;
                 System.out.println();
                 System.out.println("     " + rs.getString("IdContacto") + "        " + rs.getString("NombreContacto"));
             }
-            System.out.println();
-            System.out.println("Escoja un contacto por el id: ");
-            int id = Utilidades.validarEntero();
-            abrirChat(id);
+            if (hayContactos) {
+                System.out.println();
+                System.out.println("Escoja un contacto por el id: ");
+                int id = Utilidades.validarEntero();
+                abrirChat(id);
+            } else {
+                System.out.println();
+                System.out.println("No tiene ningún contacto, pruebe a añadir alguno");
+                System.out.println();
+            }
 
         } catch (SQLException sqlException) {
             System.err.println("Error del sql al intentar mostrar los contactos");
@@ -75,38 +85,57 @@ public class Main {
     }
 
     private static void abrirChat(int id) {
+        Scanner sc = new Scanner(System.in);
         String nombreContacto = conseguirNombrePorId(id);
         mostrarHistorialMensajes(id);
-        String mensaje = recibirMensaje();
-        insertarMensajeEnTabla(nombreContacto, mensaje, id);
+        System.out.println("No escriba nada para salir");
+        System.out.print("==> ");
+        String mensaje = sc.nextLine();
+        if (!mensaje.isEmpty() || !mensaje.isBlank()) {
+            insertarMensajeEnTabla(nombreContacto, mensaje, id);
+        }
     }
 
     private static void insertarMensajeEnTabla(String nombreContacto, String mensaje, int id) {
-        String sql = "INSERT INTO " + baseDatos + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
+        baseDatosDestino = "ad2223_" + nombreContacto;
+        String sql = "INSERT INTO " + baseDatosDestino + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
                 "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 0, " + id + ")";
-
-        System.out.println(sql);
+        //System.out.println(sql);
         try {
-            st.execute(sql);
+            st.executeUpdate(sql);
+
+            sql = "INSERT INTO " + baseDatos + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
+                    "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 1, " + id + ")";
+            try {
+                st.executeUpdate(sql);
+            } catch (SQLException e) {
+                System.out.println("No se ha podido guardar el mensaje en tu base de datos");
+            }
         } catch (SQLException sqlException) {
-            System.err.println(sqlException);
+            System.out.println("No se ha podido enviar el mensaje, lo mismo la otra persona no la tiene añadida como contacto");
         }
 
-    }
 
-    private static String recibirMensaje() {
-        Scanner sc = new Scanner(System.in);
-        return sc.nextLine();
+
     }
 
     private static void mostrarHistorialMensajes(int idConatcto) {
-        String sql = "SELECT Texto, FechaHora FROM " + baseDatos + ".Mensajes WHERE IdContacto = " + idConatcto + ";";
+        System.out.println();
+        System.out.println("/ / / / / " + conseguirNombrePorId(idConatcto) + " / / / / /");
+        String sql = "SELECT Origen, Texto, FechaHora, IsRecibido, IsLeido FROM " + baseDatos + ".Mensajes WHERE IdContacto = " + idConatcto + ";";
         try {
             ResultSet rs = st.executeQuery(sql);
-            while (rs.next()){
-                System.out.println(rs.getDate("FechaHora") + "  " + rs.getString("Texto"));
+            while (rs.next()) {
+                System.out.print(rs.getString("Origen") + " -> " + rs.getTimestamp("FechaHora") + "  " + rs.getString("Texto") + "  ");
+                if (Integer.parseInt(rs.getString("IsRecibido")) == 1) {
+                    System.out.print("✔  ");
+                }
+                if (Integer.parseInt(rs.getString("IsLeido")) == 1) {
+                    System.out.print("✔  ");
+                }
+                System.out.println();
             }
-
+            System.out.println("/ / / / / / / / / / / / / / /");
         } catch (SQLException sqlException) {
             System.err.println(sqlException.getMessage());
         }
@@ -118,7 +147,7 @@ public class Main {
         String sql = "SELECT NombreContacto FROM " + baseDatos + ".Contactos WHERE IdContacto = " + id + ";";
         try {
             ResultSet rs = st.executeQuery(sql);
-            if(rs.next()){
+            if (rs.next()) {
                 nombreContacto = rs.getString("NombreContacto");
             }
 
@@ -132,10 +161,17 @@ public class Main {
 
     private static void mostrarContactos(ResultSet rs) {
         try {
-            System.out.println("IdContacto    Nombre");
+            ResultSetMetaData rsm = rs.getMetaData();
+            for (int i = 1; i <= rsm.getColumnCount(); i++) {
+                System.out.print(rsm.getColumnName(i) + "    ");
+            }
+            System.out.println();
             while (rs.next()) {
                 System.out.println();
-                System.out.println("     " + rs.getString("IdContacto") + "        " + rs.getString("NombreContacto"));
+                for (int i = 1; i <= rsm.getColumnCount(); i++) {
+                    System.out.print("     " + rs.getString(i) + "     ");
+                }
+                System.out.println();
             }
             System.out.println();
         } catch (SQLException sqlException) {
@@ -145,7 +181,7 @@ public class Main {
 
     private static ResultSet obtenerTodosContactos() {
         ResultSet rs = null;
-        String sql = "SELECT IdContacto, NombreContacto FROM " + baseDatos + ".Contactos";
+        String sql = "SELECT IdContacto, NombreContacto, IsBloqueado FROM " + baseDatos + ".Contactos";
         try {
             rs = st.executeQuery(sql);
         } catch (SQLException sqlException) {
@@ -172,52 +208,59 @@ public class Main {
 
         mostrarContactos(obtenerTodosContactos());
 
-        System.out.println("Diga el id del contacto que quiere bloquear: ");
-        idContacto = sc.nextInt();
-
-        sqlQuery = "SELECT IsBloqueado FROM " + baseDatos + ".Contactos WHERE IdContacto= " + idContacto + ";";
-        try {
-           /* ResultSet resultSet = obtenerTodosContactos();
-            nombreContacto = resultSet.getString("NombreContacto");*/
-            ResultSet rs = st.executeQuery(sqlQuery);
-            if (rs.next()) {
-                isBloqueado = Integer.parseInt(rs.getString("IsBloqueado"));
-            }
-            if (isBloqueado == 0) {
-                sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 1 WHERE IdContacto= " + idContacto + ";";
-            } else {
-                sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 0 WHERE IdContacto= " + idContacto + ";";
-                /*sql="GRANT INSERT " +
+        System.out.println("Diga el id del contacto que quiere bloquear (Déjelo en blanco para volver atrás) ");
+        System.out.print("==> ");
+        String leido = sc.nextLine();
+        if (!leido.isBlank() || !leido.isEmpty()) {
+            idContacto = Integer.parseInt(leido);
+            sqlQuery = "SELECT IsBloqueado FROM " + baseDatos + ".Contactos WHERE IdContacto= " + idContacto + ";";
+            try {
+                ResultSet rs = st.executeQuery(sqlQuery);
+                if (rs.next()) {
+                    isBloqueado = Integer.parseInt(rs.getString("IsBloqueado"));
+                }
+                if (isBloqueado == 0) {
+                    sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 1 WHERE IdContacto= " + idContacto + ";";
+                /*
+                sql += "REVOKE INSERT " +
                         "ON " + baseDatos + ".* " +
-                        "TO '"+nombreContacto+"'@'localHost';";
-                st.execute(sql);*/
+                        "FROM '" + nombreContacto + "'@'localHost';";
+                 */
+                } else {
+                    sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 0 WHERE IdContacto= " + idContacto + ";";
+                /*
+                sql += "GRANT INSERT " +
+                        "ON " + baseDatos + ".* " +
+                        "TO '" + nombreContacto + "'@'localHost';";
+                 */
+                }
+                st.executeUpdate(sql);
+                System.out.println("Se ha actualizado con éxito :D");
+            } catch (SQLException e) {
+                System.err.println("Ha ocurrido un error muy grave :(");
             }
-            st.executeUpdate(sql);
-            System.out.println("Se ha actualizado con éxito :D");
-        } catch (SQLException e) {
-            System.err.println("Ha ocurrido un error muy grave :(");
         }
-
     }
 
     private static void anadirContacto() {
         String nombreContacto;
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("    Nombre del contacto que quiere añadir:");
+        System.out.println("    Nombre del contacto que quiere añadir (Déjelo en blanco para volver atrás)");
         System.out.print("==> ");
         nombreContacto = sc.nextLine();
+        if (!nombreContacto.isBlank() || !nombreContacto.isEmpty()) {
+            String sql = "INSERT INTO " + baseDatos + ".Contactos (NombreContacto, IsBloqueado) values ('" + nombreContacto + "', 0);";
+            try {
+                st.executeUpdate(sql);
 
-        String sql = "INSERT INTO " + baseDatos + ".Contactos (NombreContacto, IsBloqueado) values ('" + nombreContacto + "', 0);";
-        try {
-            st.executeUpdate(sql);
-
-            sql = "GRANT INSERT " +
-                    "ON " + baseDatos + ".* " +
-                    "TO '" + nombreContacto + "'@'localHost';";
-            st.execute(sql);
-        } catch (Exception e) {
-            e.printStackTrace();
+                sql = "GRANT INSERT " +
+                        "ON " + baseDatos + ".* " +
+                        "TO '" + "ad2223_" + nombreContacto + "'@'localHost';";
+                st.execute(sql);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -247,11 +290,11 @@ public class Main {
      * los datos de acceso los obtiene de las propiedades finales de la clase
      * @return
      */
-    private static Connection conectar() {
+    public static Connection conectar() {
         Connection connection;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(servidor, user, password);
+            connection = DriverManager.getConnection(servidor, "ad2223_" + user, password);
             System.out.println("Bienvenido " + user + " 👋👋🔥");
         } catch (SQLException e) {
             System.out.println("No se ha podido conectar a la base de datos");
@@ -282,5 +325,12 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static void borrarTablas() throws SQLException {
+        String sql = "drop table ad2223_" + user + ".Mensajes";
+        st.executeUpdate(sql);
+        sql = "drop table ad2223_" + user + ".Contactos";
+        st.executeUpdate(sql);
     }
 }

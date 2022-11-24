@@ -1,3 +1,4 @@
+import java.sql.*;
 import java.util.Scanner;
 
 public class Utilidades {
@@ -36,5 +37,29 @@ public class Utilidades {
             }
         } while (!correcto);
         return numero;
+    }
+
+    public static void main(String[] args) throws SQLException {
+        Connection connection = Main.conectar();
+
+        /*
+        DatabaseMetaData dbmd = connection.getMetaData();
+        ResultSet rs = dbmd.getTables(null,null, "%", null);
+
+        while (rs.next()) {
+            System.out.println(rs.getString(3));
+        }
+         */
+        Statement statement = null;
+        statement = connection.createStatement();
+        String sql = "SELECT * FROM ad2223_acastro.Mensajes;";
+        ResultSet rs = statement.executeQuery(sql);
+        ResultSetMetaData rsm = rs.getMetaData();
+        while (rs.next()) {
+            for (int i = 1; i <= rsm.getColumnCount(); i++) {
+                System.out.print(rsm.getColumnName(i) + ": " + rs.getString(i) + "    ");
+            }
+            System.out.println();
+        }
     }
 }
