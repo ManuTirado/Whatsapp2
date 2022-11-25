@@ -1,7 +1,5 @@
 import java.sql.*;
 import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class Main {
 
@@ -16,8 +14,6 @@ public class Main {
 
     public static void main(String[] args) {
         login();
-        borrarTablas();
-
 
         try {
             connection = conectar();
@@ -112,7 +108,7 @@ public class Main {
             st.executeUpdate(sql);
 
             sql = "INSERT INTO " + baseDatos + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
-                    "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 1, " + id + ")";
+                    "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 0, " + id + ")";
             try {
                 st.executeUpdate(sql);
             } catch (SQLException e) {
@@ -137,10 +133,10 @@ public class Main {
             while (rs.next()) {
                 System.out.print(rs.getString("Origen") + " -> " + rs.getTimestamp("FechaHora") + "  " + rs.getString("Texto") + "  ");
                 if (Integer.parseInt(rs.getString("IsRecibido")) == 1) {
-                    System.out.print("✔  ");
+                    System.out.print("✔");
                 }
                 if (Integer.parseInt(rs.getString("IsLeido")) == 1) {
-                    System.out.print("✔  ");
+                    System.out.print("✔");
                 }
                 System.out.println();
             }
@@ -329,17 +325,6 @@ public class Main {
             st.executeUpdate(sql);
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    private static void borrarTablas() {
-        try {
-            String sql = "drop table ad2223_" + user + ".Mensajes";
-            st.executeUpdate(sql);
-            sql = "drop table ad2223_" + user + ".Contactos";
-            st.executeUpdate(sql);
-        } catch (Exception e) {
-            System.out.println("Error al borrar tablas");;
         }
     }
 }
