@@ -7,7 +7,7 @@ public class Main {
     private static String user = "mtirado";
     private static String password = "1234";
     private static String baseDatos = "ad2223_mtirado";
-    private static String baseDatosDestino = "ad2223_mtirado";
+    private static String baseDatosDestino = "ad2223_acostro";
 
     private static Connection connection;
     private static Statement st;
@@ -61,7 +61,6 @@ public class Main {
         try {
             boolean hayContactos = false;
             ResultSet rs = obtenerContactosSinBloquear();
-            ResultSetMetaData rsm = rs.getMetaData();
             System.out.println("IdContacto    Nombre");
             while (rs.next()) {
                 hayContactos = true;
@@ -69,10 +68,15 @@ public class Main {
                 System.out.println("     " + rs.getString("IdContacto") + "        " + rs.getString("NombreContacto"));
             }
             if (hayContactos) {
+                Scanner sc = new Scanner(System.in);
                 System.out.println();
-                System.out.println("Escoja un contacto por el id: ");
-                int id = Utilidades.validarEntero();
-                abrirChat(id);
+                System.out.println("Escoja un contacto por el id (Déjelo en blanco para volver atrás) ");
+                System.out.print("==> ");
+                String leido = sc.nextLine();
+                if (!leido.isBlank() || !leido.isEmpty()) {
+                    int id = Integer.parseInt(leido);
+                    abrirChat(id);
+                }
             } else {
                 System.out.println();
                 System.out.println("No tiene ningún contacto, pruebe a añadir alguno");
@@ -100,7 +104,7 @@ public class Main {
         baseDatosDestino = "ad2223_" + nombreContacto;
         String sql = "INSERT INTO " + baseDatosDestino + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
                 "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 0, " + id + ")";
-        //System.out.println(sql);
+        System.out.println(sql);
         try {
             st.executeUpdate(sql);
 
@@ -109,12 +113,11 @@ public class Main {
             try {
                 st.executeUpdate(sql);
             } catch (SQLException e) {
-                System.out.println("No se ha podido guardar el mensaje en tu base de datos");
+                System.err.println("No se ha podido guardar el mensaje en tu base de datos");
             }
         } catch (SQLException sqlException) {
-            System.out.println("No se ha podido enviar el mensaje, lo mismo la otra persona no la tiene añadida como contacto");
+            System.err.println("No se ha podido enviar el mensaje, lo mismo la otra persona no la tiene añadida como contacto");
         }
-
 
 
     }
@@ -221,18 +224,15 @@ public class Main {
                 }
                 if (isBloqueado == 0) {
                     sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 1 WHERE IdContacto= " + idContacto + ";";
-                /*
-                sql += "REVOKE INSERT " +
-                        "ON " + baseDatos + ".* " +
-                        "FROM '" + nombreContacto + "'@'localHost';";
-                 */
+                    sql += "REVOKE INSERT " +
+                            "ON " + baseDatos + ".* " +
+                            "FROM '" + nombreContacto + "'@'localHost';";
                 } else {
                     sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 0 WHERE IdContacto= " + idContacto + ";";
-                /*
-                sql += "GRANT INSERT " +
-                        "ON " + baseDatos + ".* " +
-                        "TO '" + nombreContacto + "'@'localHost';";
-                 */
+
+                    sql += "GRANT INSERT " +
+                            "ON " + baseDatos + ".* " +
+                            "TO '" + nombreContacto + "'@'localHost';";
                 }
                 st.executeUpdate(sql);
                 System.out.println("Se ha actualizado con éxito :D");
@@ -253,13 +253,16 @@ public class Main {
             String sql = "INSERT INTO " + baseDatos + ".Contactos (NombreContacto, IsBloqueado) values ('" + nombreContacto + "', 0);";
             try {
                 st.executeUpdate(sql);
-
-                sql = "GRANT INSERT " +
-                        "ON " + baseDatos + ".* " +
-                        "TO '" + "ad2223_" + nombreContacto + "'@'localHost';";
-                st.execute(sql);
+                try {
+                    sql = "GRANT INSERT " +
+                            "ON " + baseDatos + ".* " +
+                            "TO '" + "ad2223_" + nombreContacto + "'@'localHost';";
+                    st.execute(sql);
+                } catch (SQLException e) {
+                    System.err.println("No se han podido conceder los derechos de insert al contacto");
+                }
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                System.err.println("No se ha podido insertar el contacto en la base de datos");
             }
         }
     }
