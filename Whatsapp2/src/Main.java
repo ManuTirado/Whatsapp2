@@ -13,7 +13,7 @@ public class Main {
     private static Statement st;
 
     public static void main(String[] args) {
-        //login();
+        login();
 
         try {
             connection = conectar();
@@ -273,6 +273,7 @@ public class Main {
         System.out.println("    Contraseña:");
         System.out.print("==> ");
         password = sc.nextLine();
+        baseDatos = "ad2223_" + user;
     }
 
     /***
