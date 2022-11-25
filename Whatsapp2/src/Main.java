@@ -29,18 +29,14 @@ public class Main {
                     mostrarMenuPrincipal();
                     opc = Utilidades.validarOpcion(0, 3);
                     switch (opc) {
-                        case 1:     // Contactos
-                            contactos();
-                            break;
-                        case 2:     // Añadir Contacto
-                            anadirContacto();
-                            break;
-                        case 3:     // Bloquear/Desbloquear Contacto
-                            bloquearDesbloquearContacto();
-                            break;
-                        case 0:     // Salir
-                            System.out.println("Adios!");
-                            break;
+                        case 1 ->     // Contactos
+                                contactos();
+                        case 2 ->     // Añadir Contacto
+                                anadirContacto();
+                        case 3 ->     // Bloquear/Desbloquear Contacto
+                                bloquearDesbloquearContacto();
+                        case 0 ->     // Salir
+                                System.out.println("Adios!");
                     }
                 } while (opc != 0);
 
@@ -223,7 +219,7 @@ public class Main {
     private static void bloquearDesbloquearContacto() {
         Scanner sc = new Scanner(System.in);
         int idContacto, isBloqueado = 0;
-        String sql = null, sqlQuery, nombreContacto = null;
+        String sql, sqlQuery;
 
         mostrarContactos(obtenerTodosContactos());
 
@@ -295,7 +291,7 @@ public class Main {
     /***
      * Función que crea y devuelve una connection al servidor,
      * los datos de acceso los obtiene de las propiedades finales de la clase
-     * @return
+     * @return Connection
      */
     public static Connection conectar() {
         Connection connection;
