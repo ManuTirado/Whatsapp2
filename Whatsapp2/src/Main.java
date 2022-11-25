@@ -75,7 +75,10 @@ public class Main {
                 String leido = sc.nextLine();
                 if (!leido.isBlank() || !leido.isEmpty()) {
                     int id = Integer.parseInt(leido);
-                    abrirChat(id);
+                    boolean salirChat = false;
+                    while (!salirChat) {
+                        salirChat = abrirChat(id);
+                    }
                 }
             } else {
                 System.out.println();
@@ -88,7 +91,7 @@ public class Main {
         }
     }
 
-    private static void abrirChat(int id) {
+    private static boolean abrirChat(int id) {
         Scanner sc = new Scanner(System.in);
         String nombreContacto = conseguirNombrePorId(id);
         mostrarHistorialMensajes(id);
@@ -97,6 +100,9 @@ public class Main {
         String mensaje = sc.nextLine();
         if (!mensaje.isEmpty() || !mensaje.isBlank()) {
             insertarMensajeEnTabla(nombreContacto, mensaje, id);
+            return false;
+        } else {
+            return true;
         }
     }
 
