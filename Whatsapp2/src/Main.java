@@ -27,16 +27,21 @@ public class Main {
                 int opc;
                 do {
                     mostrarMenuPrincipal();
+                    mostrarNumeroMensajesSinLeer();
                     opc = Utilidades.validarOpcion(0, 3);
                     switch (opc) {
-                        case 1 ->     // Contactos
-                                contactos();
-                        case 2 ->     // Añadir Contacto
-                                anadirContacto();
-                        case 3 ->     // Bloquear/Desbloquear Contacto
-                                bloquearDesbloquearContacto();
-                        case 0 ->     // Salir
-                                System.out.println("Adios!");
+                        case 1:     // Contactos
+                            contactos();
+                            break;
+                        case 2:     // Añadir Contacto
+                            anadirContacto();
+                            break;
+                        case 3:    // Bloquear/Desbloquear Contacto
+                            bloquearDesbloquearContacto();
+                            break;
+                        case 0:    // Salir
+                            System.out.println("Adios!");
+                            break;
                     }
                 } while (opc != 0);
 
@@ -51,7 +56,6 @@ public class Main {
             throw new RuntimeException(e);
         }
     }
-
 
     private static void contactos() {
         try {
@@ -124,6 +128,8 @@ public class Main {
     }
 
     private static void mostrarHistorialMensajes(int idConatcto) {
+        String ANSI_RED = "\u001B[31m";
+        String ANSI_RESET = "\u001B[0m";
         String nombreContacto = conseguirNombrePorId(idConatcto);
         baseDatosDestino = "ad2223_" + nombreContacto;
         actualizarLeidos(nombreContacto);
@@ -133,14 +139,22 @@ public class Main {
         try {
             ResultSet rs = st.executeQuery(sql);
             while (rs.next()) {
-                System.out.print(rs.getString("Origen") + " -> " + rs.getTimestamp("FechaHora") + "  " + rs.getString("Texto") + "  ");
+                String origen = rs.getString("Origen");
+                String isLeido = rs.getString("IsLeido");
+                String color;
+                if (origen.equals(user)) {
+                    color = !isLeido.equals("0")? ANSI_RESET:ANSI_RED;
+                } else {
+                    color = ANSI_RESET;
+                }
+                System.out.print(color + origen + " -> " + rs.getTimestamp("FechaHora") + "  " + rs.getString("Texto") + "  ");
                 if (Integer.parseInt(rs.getString("IsRecibido")) == 1) {
                     System.out.print("✔");
                 }
-                if (Integer.parseInt(rs.getString("IsLeido")) == 1) {
+                if (Integer.parseInt(isLeido) == 1) {
                     System.out.print("✔");
                 }
-                System.out.println();
+                System.out.println(ANSI_RESET);
             }
             System.out.println("/ / / / / / / / / / / / / / /");
         } catch (SQLException sqlException) {
@@ -201,6 +215,7 @@ public class Main {
             rs = st.executeQuery(sql);
         } catch (SQLException sqlException) {
             System.err.println("Error del sql al intentar obtener los contactos");
+            throw new RuntimeException(sqlException);
         }
         return rs;
     }
@@ -211,7 +226,8 @@ public class Main {
         try {
             rs = st.executeQuery(sql);
         } catch (SQLException sqlException) {
-            System.err.println("Error del sql al intentar obtener los contactos");
+            //System.err.println("Error del sql al intentar obtener los contactos");
+            throw new RuntimeException(sqlException);
         }
         return rs;
     }
@@ -256,14 +272,33 @@ public class Main {
         System.out.print("==> ");
         nombreContacto = sc.nextLine();
         if (!nombreContacto.isBlank() || !nombreContacto.isEmpty()) {
-            String sql = "INSERT INTO " + baseDatos + ".Contactos (NombreContacto, IsBloqueado) values ('" + nombreContacto + "', 0);";
-            try {
-                st.executeUpdate(sql);
-            } catch (SQLException e) {
-                System.err.println("No se han podido insertar el mensaje en la base de datos");
-                throw new RuntimeException(e);
+            if (!existeContacto(nombreContacto)) {
+                String sql = "INSERT INTO " + baseDatos + ".Contactos (NombreContacto, IsBloqueado) values ('" + nombreContacto + "', 0);";
+                try {
+                    st.executeUpdate(sql);
+                } catch (SQLException e) {
+                    System.err.println("No se han podido insertar el mensaje en la base de datos");
+                    throw new RuntimeException(e);
+                }
+            } else {
+                System.out.println("El contacto ya existe");
             }
         }
+    }
+
+    private static boolean existeContacto(String nombreContacto) {
+        boolean existe = false;
+        ResultSet rs = obtenerTodosContactos();
+        try {
+            while (rs.next() && !existe) {
+                if (rs.getString("NombreContacto").equals(nombreContacto)) {
+                    existe = true;
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return existe;
     }
 
     private static void mostrarMenuPrincipal() {
@@ -273,6 +308,20 @@ public class Main {
         System.out.println("3 - Bloquear Contacto");
         System.out.println("0 - Salir");
         System.out.println();
+    }
+
+    private static void mostrarNumeroMensajesSinLeer() {
+        int mensajesSinLeer = 0;
+        try {
+            String sql = "SELECT Origen, Destino, IsLeido FROM " + baseDatos + ".Mensajes WHERE Destino = '" + user + "' AND IsLeido = 0;";
+            ResultSet rs = st.executeQuery(sql);
+            while (rs.next()) {
+                mensajesSinLeer++;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Tiene " + mensajesSinLeer + " mensajes sin leer");
     }
 
     private static void login() {
