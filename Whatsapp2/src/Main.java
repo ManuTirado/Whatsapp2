@@ -3,11 +3,11 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static String servidor = "jdbc:mysql://dns11036.phdns11.es";
+    private static final String SERVIDOR = "jdbc:mysql://dns11036.phdns11.es";
     private static String user = "mtirado";
     private static String password = "1234";
     private static String baseDatos = "ad2223_mtirado";
-    private static String baseDatosDestino = "ad2223_acostro";
+    private static String baseDatosDestino = "ad2223_acastro";
 
     private static Connection connection;
     private static Statement st;
@@ -114,18 +114,19 @@ public class Main {
                 st.executeUpdate(sql);
             } catch (SQLException e) {
                 System.err.println("No se ha podido guardar el mensaje en tu base de datos");
+                throw new RuntimeException(e);
             }
         } catch (SQLException sqlException) {
             System.err.println("No se ha podido enviar el mensaje, lo mismo la otra persona no la tiene añadida como contacto");
+            throw new RuntimeException(sqlException);
         }
-
-
     }
 
     private static void mostrarHistorialMensajes(int idConatcto) {
+        String nombreContacto = conseguirNombrePorId(idConatcto);
         System.out.println();
         System.out.println("/ / / / / " + conseguirNombrePorId(idConatcto) + " / / / / /");
-        String sql = "SELECT Origen, Texto, FechaHora, IsRecibido, IsLeido FROM " + baseDatos + ".Mensajes WHERE IdContacto = " + idConatcto + ";";
+        String sql = "SELECT Origen, Destino, Texto, FechaHora, IsRecibido, IsLeido FROM " + baseDatos + ".Mensajes WHERE Destino = '" + nombreContacto + "' OR Origen = '" + nombreContacto + "';";
         try {
             ResultSet rs = st.executeQuery(sql);
             while (rs.next()) {
@@ -224,20 +225,14 @@ public class Main {
                 }
                 if (isBloqueado == 0) {
                     sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 1 WHERE IdContacto= " + idContacto + ";";
-                    sql += "REVOKE INSERT " +
-                            "ON " + baseDatos + ".* " +
-                            "FROM '" + nombreContacto + "'@'localHost';";
                 } else {
                     sql = "UPDATE " + baseDatos + ".Contactos SET IsBloqueado = 0 WHERE IdContacto= " + idContacto + ";";
-
-                    sql += "GRANT INSERT " +
-                            "ON " + baseDatos + ".* " +
-                            "TO '" + nombreContacto + "'@'localHost';";
                 }
                 st.executeUpdate(sql);
                 System.out.println("Se ha actualizado con éxito :D");
             } catch (SQLException e) {
                 System.err.println("Ha ocurrido un error muy grave :(");
+                throw new RuntimeException(e);
             }
         }
     }
@@ -253,16 +248,9 @@ public class Main {
             String sql = "INSERT INTO " + baseDatos + ".Contactos (NombreContacto, IsBloqueado) values ('" + nombreContacto + "', 0);";
             try {
                 st.executeUpdate(sql);
-                try {
-                    sql = "GRANT INSERT " +
-                            "ON " + baseDatos + ".* " +
-                            "TO '" + "ad2223_" + nombreContacto + "'@'localHost';";
-                    st.execute(sql);
-                } catch (SQLException e) {
-                    System.err.println("No se han podido conceder los derechos de insert al contacto");
-                }
             } catch (SQLException e) {
-                System.err.println("No se ha podido insertar el contacto en la base de datos");
+                System.err.println("No se han podido insertar el mensaje en la base de datos");
+                throw new RuntimeException(e);
             }
         }
     }
@@ -297,7 +285,7 @@ public class Main {
         Connection connection;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            connection = DriverManager.getConnection(servidor, "ad2223_" + user, password);
+            connection = DriverManager.getConnection(SERVIDOR, "ad2223_" + user, password);
             System.out.println("Bienvenido " + user + " 👋👋🔥");
         } catch (SQLException e) {
             System.out.println("No se ha podido conectar a la base de datos");
