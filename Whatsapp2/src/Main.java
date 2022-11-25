@@ -3,10 +3,15 @@ import java.util.Scanner;
 
 public class Main {
 
+    //URL del servidor
     private static final String SERVIDOR = "jdbc:mysql://dns11036.phdns11.es";
+    //Nombre usuario
     private static String user = "mtirado";
+    //Contraseña
     private static String password = "1234";
+    //Nombre de la base de datos del emisor
     private static String baseDatos = "ad2223_mtirado";
+    //Nombre de la base de datos del receptor
     private static String baseDatosDestino = "ad2223_acastro";
 
     private static Connection connection;
@@ -57,6 +62,9 @@ public class Main {
         }
     }
 
+    /**
+     * Método que mostrará lso contactos que tenemos en nuestro chat
+     */
     private static void contactos() {
         try {
             boolean hayContactos = false;
@@ -91,6 +99,11 @@ public class Main {
         }
     }
 
+    /**
+     *
+     * @param id
+     * @return
+     */
     private static boolean abrirChat(int id) {
         Scanner sc = new Scanner(System.in);
         String nombreContacto = conseguirNombrePorId(id);
@@ -106,16 +119,24 @@ public class Main {
         }
     }
 
+    /**
+     * Este método introduce un mensaje en la tabla de mensajes de los usuarios tanto del receptor como del emisor
+     * @param nombreContacto nombre del contacto al que le enviamos el mensaje
+     * @param mensaje mensaje el cual queremos enviar
+     * @param id id del contacto al que queremos enviar el mensaje
+     */
     private static void insertarMensajeEnTabla(String nombreContacto, String mensaje, int id) {
         baseDatosDestino = "ad2223_" + nombreContacto;
         String sql = "INSERT INTO " + baseDatosDestino + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
                 "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 1, " + id + ")";
         try {
+            //Actualiza la tabla mensajes del receptor
             st.executeUpdate(sql);
 
             sql = "INSERT INTO " + baseDatos + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
                     "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 0, " + id + ")";
             try {
+                //Actualiza la tabla de mensajes del emisor
                 st.executeUpdate(sql);
             } catch (SQLException e) {
                 System.err.println("No se ha podido guardar el mensaje en tu base de datos");
@@ -127,6 +148,10 @@ public class Main {
         }
     }
 
+    /**
+     * Muestra el chat entero de las dos personas
+     * @param idConatcto id del contacto con el que chateamos
+     */
     private static void mostrarHistorialMensajes(int idConatcto) {
         String ANSI_RED = "\u001B[31m";
         String ANSI_RESET = "\u001B[0m";
@@ -162,6 +187,10 @@ public class Main {
         }
     }
 
+    /**
+     * Actualiza la tabla de mensajes cuando el usuario receptor abre el chat y lee el mensaje
+     * @param nombreContatco nombre del contacto con el que hemos chateado
+     */
     private static void actualizarLeidos(String nombreContatco) {
         String sql = "UPDATE " + baseDatos + ".Mensajes SET IsLeido = 1 WHERE Origen = '" + nombreContatco + "';";
         try {
@@ -171,6 +200,11 @@ public class Main {
         }
     }
 
+    /**
+     * Con el id conseguimos el nombre del contacto que tenga ese mismo id
+     * @param id numero de identificación de cada contacto
+     * @return devuelve el nombre del contacto que tiene el mismo id que le pasamos por parámetros
+     */
     private static String conseguirNombrePorId(int id) {
         String nombreContacto = "";
         String sql = "SELECT NombreContacto FROM " + baseDatos + ".Contactos WHERE IdContacto = " + id + ";";
@@ -188,6 +222,10 @@ public class Main {
         return nombreContacto;
     }
 
+    /**
+     * Muestra una lista con todos los contactos que tenemos agregados en la tabla de contactos ya estén bloqeuados o no
+     * @param rs result set para poder mostrar los resultados de la query
+     */
     private static void mostrarContactos(ResultSet rs) {
         try {
             ResultSetMetaData rsm = rs.getMetaData();
@@ -208,6 +246,10 @@ public class Main {
         }
     }
 
+    /**
+     * Método que obtiene todos los contactos y los guarda en un result set para poder enviarlos
+     * @return result set con todos la tabla contactos y todos sus campos
+     */
     private static ResultSet obtenerTodosContactos() {
         ResultSet rs = null;
         String sql = "SELECT IdContacto, NombreContacto, IsBloqueado FROM " + baseDatos + ".Contactos";
@@ -220,6 +262,10 @@ public class Main {
         return rs;
     }
 
+    /**
+     * Obtiene un result set en el que solo se encuentran los contactos sin bloquear
+     * @return result set con la tabal contactos y todos sus campos de los contactos que no estén bloqueados
+     */
     private static ResultSet obtenerContactosSinBloquear() {
         ResultSet rs = null;
         String sql = "SELECT IdContacto, NombreContacto FROM " + baseDatos + ".Contactos WHERE IsBloqueado = 0";
@@ -232,6 +278,13 @@ public class Main {
         return rs;
     }
 
+    /**
+     * Método que nos permite tanto bloquear como desbloquear un contacto. Nos mostrará una lista con todos los contactos
+     * tanto los bloqueados como los no bloqueados. Luego elegiremos un contacto, en caso de que este esté bloqueado lo
+     * desbloquearemos, en caso contrario lo bloquearemos
+     * Precondición: Tener algún contacto agregado
+     * Postcondición: Ninguna
+     */
     private static void bloquearDesbloquearContacto() {
         Scanner sc = new Scanner(System.in);
         int idContacto, isBloqueado = 0;
@@ -264,6 +317,12 @@ public class Main {
         }
     }
 
+    /**
+     * Este método nos da la opción de añadir un nuevo contacto a nuestra tabla de contactos
+     * No nos permitirá introducir contactos repetidos
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
+     */
     private static void anadirContacto() {
         String nombreContacto;
         Scanner sc = new Scanner(System.in);
@@ -286,6 +345,13 @@ public class Main {
         }
     }
 
+    /**
+     * Este método comprueba si el contacto que queremos añadir ya existe o no.
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
+     * @param nombreContacto nombre del contacto qeu queremos añadir
+     * @return devuelve si el contacto que queremos añadir existe o no
+     */
     private static boolean existeContacto(String nombreContacto) {
         boolean existe = false;
         ResultSet rs = obtenerTodosContactos();
@@ -301,6 +367,11 @@ public class Main {
         return existe;
     }
 
+    /**
+     * Muestra un menu con las opciones que le mostramos al usuario
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
+     */
     private static void mostrarMenuPrincipal() {
         System.out.println("- - - - - - " + user + " - - - - - -");
         System.out.println("1 - Contactos");
@@ -324,6 +395,11 @@ public class Main {
         System.out.println("Tiene " + mensajesSinLeer + " mensajes sin leer");
     }
 
+    /**
+     * Nos pide nuestro usuario y contraseña par aingresar a nuestra abse de datos
+     * Precondición: Tener una base de datos
+     * Postcondición: Ninguna
+     */
     private static void login() {
         Scanner sc = new Scanner(System.in);
         System.out.println("- - - - - - WhatsApp2 - - - - - -");
