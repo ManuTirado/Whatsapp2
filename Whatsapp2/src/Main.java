@@ -7,7 +7,7 @@ public class Main {
     private static String user = "mtirado";
     private static String password = "1234";
     private static String baseDatos = "ad2223_mtirado";
-    private static String baseDatosDestino = "ad2223_acostro";
+    private static String baseDatosDestino = "ad2223_acastro";
 
     private static Connection connection;
     private static Statement st;
@@ -104,7 +104,6 @@ public class Main {
         baseDatosDestino = "ad2223_" + nombreContacto;
         String sql = "INSERT INTO " + baseDatosDestino + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
                 "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 0, " + id + ")";
-        System.out.println(sql);
         try {
             st.executeUpdate(sql);
 
@@ -331,9 +330,9 @@ public class Main {
     }
 
     private static void borrarTablas() throws SQLException {
-        String sql = "drop table ad2223_" + user + ".Mensajes";
+        String sql = "drop table " + user + ".Mensajes";
         st.executeUpdate(sql);
-        sql = "drop table ad2223_" + user + ".Contactos";
+        sql = "drop table " + user + ".Contactos";
         st.executeUpdate(sql);
     }
 }
