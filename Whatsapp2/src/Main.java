@@ -1,5 +1,7 @@
 import java.sql.*;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class Main {
 
@@ -14,6 +16,11 @@ public class Main {
 
     public static void main(String[] args) {
         login();
+<<<<<<< HEAD
+=======
+        borrarTablas();
+
+>>>>>>> f5e86e4039cdacdb27142d3a5f366aa92bd56cc9
 
         try {
             connection = conectar();
@@ -103,7 +110,7 @@ public class Main {
     private static void insertarMensajeEnTabla(String nombreContacto, String mensaje, int id) {
         baseDatosDestino = "ad2223_" + nombreContacto;
         String sql = "INSERT INTO " + baseDatosDestino + ".Mensajes (Origen, Destino,  Texto, IsLeido, IsRecibido, IdContacto) " +
-                "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 0, " + id + ")";
+                "VALUES ('" + user + "' , '" + nombreContacto + "' ,  '" + mensaje + "' , 0, 1, " + id + ")";
         try {
             st.executeUpdate(sql);
 
@@ -123,9 +130,11 @@ public class Main {
 
     private static void mostrarHistorialMensajes(int idConatcto) {
         String nombreContacto = conseguirNombrePorId(idConatcto);
+        baseDatosDestino = "ad2223_" + nombreContacto;
+        actualizarLeidos(nombreContacto);
         System.out.println();
-        System.out.println("/ / / / / " + conseguirNombrePorId(idConatcto) + " / / / / /");
-        String sql = "SELECT Origen, Destino, Texto, FechaHora, IsRecibido, IsLeido FROM " + baseDatos + ".Mensajes WHERE Destino = '" + nombreContacto + "' OR Origen = '" + nombreContacto + "';";
+        System.out.println("/ / / / / " + nombreContacto + " / / / / /");
+        String sql = "SELECT Origen, Destino, Texto, FechaHora, IsRecibido, IsLeido FROM " + baseDatosDestino + ".Mensajes WHERE Destino = '" + user + "' OR Origen = '" + user + "';";
         try {
             ResultSet rs = st.executeQuery(sql);
             while (rs.next()) {
@@ -144,6 +153,14 @@ public class Main {
         }
     }
 
+    private static void actualizarLeidos(String nombreContatco) {
+        String sql = "UPDATE " + baseDatos + ".Mensajes SET IsLeido = 1 WHERE Origen = '" + nombreContatco + "';";
+        try {
+            st.executeUpdate(sql);
+        } catch (SQLException sqlException) {
+            System.err.println(sqlException.getMessage());
+        }
+    }
 
     private static String conseguirNombrePorId(int id) {
         String nombreContacto = "";
@@ -318,10 +335,14 @@ public class Main {
         }
     }
 
-    private static void borrarTablas() throws SQLException {
-        String sql = "drop table " + user + ".Mensajes";
-        st.executeUpdate(sql);
-        sql = "drop table " + user + ".Contactos";
-        st.executeUpdate(sql);
+    private static void borrarTablas() {
+        try {
+            String sql = "drop table ad2223_" + user + ".Mensajes";
+            st.executeUpdate(sql);
+            sql = "drop table ad2223_" + user + ".Contactos";
+            st.executeUpdate(sql);
+        } catch (Exception e) {
+            System.out.println("Error al borrar tablas");;
+        }
     }
 }
