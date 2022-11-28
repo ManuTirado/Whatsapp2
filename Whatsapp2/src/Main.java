@@ -64,6 +64,8 @@ public class Main {
 
     /**
      * Método que mostrará lso contactos que tenemos en nuestro chat
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      */
     private static void contactos() {
         try {
@@ -100,9 +102,9 @@ public class Main {
     }
 
     /**
-     *
-     * @param id
-     * @return
+     * Abre el chat del contacto seleccionado y muestra tu historial de chat con él y permite mandar mensajes
+     * @param id id del contacto con el que vamos a chatear
+     * @return devuelve si el mensaje que escribimos esta vacio o no
      */
     private static boolean abrirChat(int id) {
         Scanner sc = new Scanner(System.in);
@@ -121,6 +123,8 @@ public class Main {
 
     /**
      * Este método introduce un mensaje en la tabla de mensajes de los usuarios tanto del receptor como del emisor
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      * @param nombreContacto nombre del contacto al que le enviamos el mensaje
      * @param mensaje mensaje el cual queremos enviar
      * @param id id del contacto al que queremos enviar el mensaje
@@ -150,6 +154,8 @@ public class Main {
 
     /**
      * Muestra el chat entero de las dos personas
+     * Precondición: Ninguna
+     *  Postcondición: Ninguna
      * @param idConatcto id del contacto con el que chateamos
      */
     private static void mostrarHistorialMensajes(int idConatcto) {
@@ -189,6 +195,8 @@ public class Main {
 
     /**
      * Actualiza la tabla de mensajes cuando el usuario receptor abre el chat y lee el mensaje
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      * @param nombreContatco nombre del contacto con el que hemos chateado
      */
     private static void actualizarLeidos(String nombreContatco) {
@@ -202,6 +210,8 @@ public class Main {
 
     /**
      * Con el id conseguimos el nombre del contacto que tenga ese mismo id
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      * @param id numero de identificación de cada contacto
      * @return devuelve el nombre del contacto que tiene el mismo id que le pasamos por parámetros
      */
@@ -224,6 +234,8 @@ public class Main {
 
     /**
      * Muestra una lista con todos los contactos que tenemos agregados en la tabla de contactos ya estén bloqeuados o no
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      * @param rs result set para poder mostrar los resultados de la query
      */
     private static void mostrarContactos(ResultSet rs) {
@@ -248,6 +260,8 @@ public class Main {
 
     /**
      * Método que obtiene todos los contactos y los guarda en un result set para poder enviarlos
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      * @return result set con todos la tabla contactos y todos sus campos
      */
     private static ResultSet obtenerTodosContactos() {
@@ -264,6 +278,8 @@ public class Main {
 
     /**
      * Obtiene un result set en el que solo se encuentran los contactos sin bloquear
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      * @return result set con la tabal contactos y todos sus campos de los contactos que no estén bloqueados
      */
     private static ResultSet obtenerContactosSinBloquear() {
@@ -381,6 +397,11 @@ public class Main {
         System.out.println();
     }
 
+    /**
+     * Muestra la cantidad de mensajes que tenemos sin leer en nuestros chats
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
+     */
     private static void mostrarNumeroMensajesSinLeer() {
         int mensajesSinLeer = 0;
         try {
@@ -416,6 +437,8 @@ public class Main {
     /***
      * Función que crea y devuelve una connection al servidor,
      * los datos de acceso los obtiene de las propiedades finales de la clase
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      * @return Connection
      */
     public static Connection conectar() {
@@ -437,6 +460,8 @@ public class Main {
 
     /***
      * Procedimiento que crea una tabla en la base de datos definida en las propiedades finales de la clase
+     * Precondición: Ninguna
+     * Postcondición: Ninguna
      * @param tabla Nombre tabla
      * @param campos Nombre campo + tipo de dato + (si procede) Extras como AUTO_INCREMENT...
      */
